@@ -12,7 +12,8 @@ async function renderEJS(req, res, view, data = {}, status = 200) {
   const renderData = {
     user: null,
     currentPath: req.url || '/',
-    messages: { error: [], success: [], info: [] },
+    error: [],
+    success: [],
     ...data
   };
 
