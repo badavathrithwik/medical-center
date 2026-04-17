@@ -8,8 +8,25 @@ async function renderEJS(res, view, data = {}, status = 200) {
     return res.status(status).render(view, data);
   }
   // If Vercel serverless, use ejs.renderFile
-  const templatePath = path.join(process.cwd(), 'views', `${view}.ejs`);
-  const html = await ejs.renderFile(templatePath, data);
+  // Try both process.cwd() and __dirname parent for robustness
+  const tryPaths = [
+    path.resolve(process.cwd(), 'views', `${view}.ejs`),
+    path.resolve(__dirname, '..', 'views', `${view}.ejs`)
+  ];
+  let html = null;
+  let lastErr = null;
+  for (const templatePath of tryPaths) {
+    try {
+      html = await ejs.renderFile(templatePath, data);
+      break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  if (!html) {
+    res.status(500).send('Template not found or error rendering EJS: ' + (lastErr ? lastErr.message : 'Unknown error'));
+    return;
+  }
   res.status(status).send(html);
 }
 
