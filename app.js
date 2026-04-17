@@ -52,7 +52,12 @@ app.use((err, req, res, next) => {
     res.status(500).render('error', { title: 'Server Error', error: err.message });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Medical Center server running on http://localhost:${PORT}`);
-});
+// Only listen if not running in a serverless environment
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Medical Center server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
