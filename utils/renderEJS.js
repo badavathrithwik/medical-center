@@ -2,12 +2,20 @@ const ejs = require('ejs');
 const path = require('path');
 
 // Utility to render EJS in both Express and Vercel serverless
-async function renderEJS(res, view, data = {}, status = 200) {
+async function renderEJS(req, res, view, data = {}, status = 200) {
   // If Express (local), use res.render
   if (typeof res.render === 'function') {
     return res.status(status).render(view, data);
   }
   // If Vercel serverless, use ejs.renderFile
+  // Also pass default values for locals that might be expected globally
+  const renderData = {
+    user: null,
+    currentPath: req.url || '/',
+    messages: { error: [], success: [], info: [] },
+    ...data
+  };
+
   // Try both process.cwd() and __dirname parent for robustness
   const tryPaths = [
     path.resolve(process.cwd(), 'views', `${view}.ejs`),
@@ -17,7 +25,7 @@ async function renderEJS(res, view, data = {}, status = 200) {
   let lastErr = null;
   for (const templatePath of tryPaths) {
     try {
-      html = await ejs.renderFile(templatePath, data);
+      html = await ejs.renderFile(templatePath, renderData);
       break;
     } catch (err) {
       lastErr = err;
