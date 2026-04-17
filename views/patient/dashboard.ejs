@@ -1,0 +1,183 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-tachometer-alt"></i> Welcome, <%= user.name %></h1>
+        <p>Your health dashboard at IIT Ropar Medical Center</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="stats-grid stats-grid-3">
+            <div class="stat-card stat-blue">
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-info">
+                    <h3><%= totalAppointments %></h3>
+                    <p>Total Appointments</p>
+                </div>
+            </div>
+            <div class="stat-card stat-green">
+                <div class="stat-icon"><i class="fas fa-file-prescription"></i></div>
+                <div class="stat-info">
+                    <h3><%= totalPrescriptions %></h3>
+                    <p>Prescriptions</p>
+                </div>
+            </div>
+            <div class="stat-card stat-orange">
+                <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+                <div class="stat-info">
+                    <h3><%= appointments.length %></h3>
+                    <p>Upcoming Appointments</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-actions">
+            <a href="/appointments/book" class="action-card">
+                <i class="fas fa-calendar-plus"></i>
+                <span>Book Appointment</span>
+            </a>
+            <a href="/patient/appointments" class="action-card">
+                <i class="fas fa-calendar-check"></i>
+                <span>My Appointments</span>
+            </a>
+            <a href="/patient/prescriptions" class="action-card">
+                <i class="fas fa-file-prescription"></i>
+                <span>My Prescriptions</span>
+            </a>
+            <a href="/patient/medical-records" class="action-card">
+                <i class="fas fa-notes-medical"></i>
+                <span>Medical Records</span>
+            </a>
+            <a href="/feedback" class="action-card">
+                <i class="fas fa-comment-dots"></i>
+                <span>Give Feedback</span>
+            </a>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Upcoming Appointments</h3>
+                    <a href="/appointments/book" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Book New</a>
+                </div>
+                <div class="card-body">
+                    <% if (appointments && appointments.length > 0) { %>
+                        <% appointments.forEach(apt => { %>
+                            <div class="appointment-mini">
+                                <div class="apt-left">
+                                    <div class="apt-date-box">
+                                        <span class="apt-day"><%= new Date(apt.appointment_date).getDate() %></span>
+                                        <span class="apt-month"><%= new Date(apt.appointment_date).toLocaleString('en', { month: 'short' }) %></span>
+                                    </div>
+                                </div>
+                                <div class="apt-info">
+                                    <strong><%= apt.doctor_name %></strong>
+                                    <span class="text-muted"><%= apt.specialization %></span>
+                                    <% if (apt.start_time && apt.end_time) { %>
+                                        <span class="text-muted">Slot: <%= apt.start_time.slice(0, 5) %> - <%= apt.end_time.slice(0, 5) %></span>
+                                    <% } %>
+                                    <span class="badge badge-<%= apt.status === 'confirmed' ? 'success' : 'warning' %>"><%= apt.status %></span>
+                                    <% if (apt.queuePosition) { %>
+                                        <div class="queue-summary">
+                                            <strong>Queue position <%= apt.queuePosition %></strong> of <%= apt.queueSize %>
+                                            <% if (apt.patientsAhead > 0) { %>
+                                                <span class="text-muted"> - <%= apt.patientsAhead %> ahead of you</span>
+                                            <% } else { %>
+                                                <span class="text-muted"> - You are next in line</span>
+                                            <% } %>
+                                        </div>
+                                    <% } %>
+                                    <% if (apt.queue && apt.queue.length > 0) { %>
+                                        <div class="queue-strip">
+                                            <% apt.queue.forEach(entry => { %>
+                                                <span class="queue-pill <%= entry.isCurrentPatient ? 'queue-pill-active' : '' %>">
+                                                    <span class="queue-pill-order"><%= entry.position %></span>
+                                                    <span><%= entry.patientName %></span>
+                                                </span>
+                                            <% }) %>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                <% if (apt.status === 'pending') { %>
+                                    <form action="/appointments/<%= apt.id %>/cancel" method="POST">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this appointment?')">Cancel</button>
+                                    </form>
+                                <% } %>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="empty-state small-state">
+                            <i class="fas fa-calendar-plus"></i>
+                            <p>No upcoming appointments.</p>
+                            <a href="/appointments/book" class="btn btn-sm btn-primary">Book an Appointment</a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-file-prescription"></i> Recent Prescriptions</h3>
+                    <a href="/patient/prescriptions" class="btn btn-sm btn-outline">View All</a>
+                </div>
+                <div class="card-body">
+                    <% if (recentPrescriptions && recentPrescriptions.length > 0) { %>
+                        <% recentPrescriptions.forEach(rx => { %>
+                            <div class="prescription-mini">
+                                <div class="rx-header">
+                                    <strong><%= rx.diagnosis.substring(0, 50) %><%= rx.diagnosis.length > 50 ? '...' : '' %></strong>
+                                    <span class="text-muted"><%= new Date(rx.created_at).toLocaleDateString('en-IN') %></span>
+                                </div>
+                                <p class="text-muted">By <%= rx.doctor_name %></p>
+                                <a href="/patient/prescriptions/<%= rx.id %>" class="btn btn-sm btn-outline">View</a>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="empty-state small-state">
+                            <i class="fas fa-file-prescription"></i>
+                            <p>No prescriptions yet.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-2">
+            <div class="card-header">
+                <h3><i class="fas fa-notes-medical"></i> Medical Record Summary</h3>
+                <a href="/patient/medical-records" class="btn btn-sm btn-outline">Update</a>
+            </div>
+            <div class="card-body">
+                <% if (medicalRecord) { %>
+                    <div class="info-grid-4">
+                        <div class="info-box">
+                            <span class="info-label">Blood Group</span>
+                            <span class="info-value"><%= medicalRecord.blood_group || 'Not set' %></span>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label">Height</span>
+                            <span class="info-value"><%= medicalRecord.height_cm ? medicalRecord.height_cm + ' cm' : 'Not set' %></span>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label">Weight</span>
+                            <span class="info-value"><%= medicalRecord.weight_kg ? medicalRecord.weight_kg + ' kg' : 'Not set' %></span>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label">Allergies</span>
+                            <span class="info-value"><%= medicalRecord.allergies || 'None' %></span>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="empty-state small-state">
+                        <p>No medical record on file. <a href="/patient/medical-records">Add your medical information</a></p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

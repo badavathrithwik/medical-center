@@ -1,0 +1,34 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="auth-section">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-icon">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <h2>Welcome Back</h2>
+                <p>Sign in to IIT Ropar Medical Center</p>
+            </div>
+            <form action="/auth/login" method="POST">
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="your.email@iitrpr.ac.in" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+            </form>
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="/auth/register">Register here</a></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

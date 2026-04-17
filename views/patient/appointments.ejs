@@ -1,0 +1,83 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header">
+    <div class="container">
+        <div class="page-header-row">
+            <div>
+                <h1><i class="fas fa-calendar-check"></i> My Appointments</h1>
+                <p>View all your appointment history</p>
+            </div>
+            <a href="/appointments/book" class="btn btn-primary"><i class="fas fa-plus"></i> Book New</a>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <% if (appointments && appointments.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Slot</th>
+                            <th>Doctor</th>
+                            <th>Specialization</th>
+                            <th>Queue</th>
+                            <th>Symptoms</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% appointments.forEach((apt, idx) => { %>
+                            <tr>
+                                <td><%= idx + 1 %></td>
+                                <td><%= new Date(apt.appointment_date).toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) %></td>
+                                <td><%= apt.start_time && apt.end_time ? `${apt.start_time.slice(0, 5)} - ${apt.end_time.slice(0, 5)}` : 'N/A' %></td>
+                                <td><%= apt.doctor_name %></td>
+                                <td><%= apt.specialization %></td>
+                                <td>
+                                    <% if (apt.queuePosition) { %>
+                                        <div class="queue-cell">
+                                            <strong><%= apt.queuePosition %> / <%= apt.queueSize %></strong>
+                                            <span class="text-muted"><%= apt.patientsAhead === 0 ? 'You are next' : `${apt.patientsAhead} ahead` %></span>
+                                        </div>
+                                    <% } else { %>
+                                        <span class="text-muted">N/A</span>
+                                    <% } %>
+                                </td>
+                                <td><%= apt.symptoms ? apt.symptoms.substring(0, 50) + (apt.symptoms.length > 50 ? '...' : '') : 'N/A' %></td>
+                                <td>
+                                    <span class="badge badge-<%= apt.status === 'confirmed' ? 'success' : apt.status === 'pending' ? 'warning' : apt.status === 'completed' ? 'info' : 'danger' %>">
+                                        <%= apt.status %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (apt.status === 'pending' || apt.status === 'confirmed') { %>
+                                        <form action="/appointments/<%= apt.id %>/cancel" method="POST" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this appointment?')">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <h3>No appointments yet</h3>
+                <p>Book your first appointment with our doctors.</p>
+                <a href="/appointments/book" class="btn btn-primary"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+            </div>
+        <% } %>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,113 @@
+<!-- Top Bar -->
+<div class="top-bar">
+    <div class="container top-bar-inner">
+        <div class="top-bar-left">
+            <span><i class="fas fa-clock"></i> Emergency & Ambulance: 24 x 7</span>
+            <span><i class="fas fa-phone"></i> 01881-235193 / 235187</span>
+        </div>
+        <div class="top-bar-right">
+            <% if (user) { %>
+                <span><i class="fas fa-user"></i> <%= user.name %> (<%= user.role %>)</span>
+            <% } else { %>
+                <a href="/auth/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="/auth/register"><i class="fas fa-user-plus"></i> Register</a>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Main Navbar -->
+<nav class="navbar">
+    <div class="container nav-inner">
+        <a href="/" class="nav-brand">
+            <div class="brand-icon">
+                <i class="fas fa-hospital"></i>
+            </div>
+            <div class="brand-text">
+                <span class="brand-title">MEDICAL <span class="accent">CENTER</span></span>
+                <span class="brand-subtitle">IIT Ropar</span>
+            </div>
+        </a>
+
+        <button class="nav-toggle" id="navToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <ul class="nav-links" id="navLinks">
+            <% if (user && user.role === 'admin') { %>
+                <li><a href="/admin/dashboard" class="<%= currentPath === '/admin/dashboard' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a></li>
+                <li><a href="/admin/patients" class="<%= currentPath === '/admin/patients' ? 'active' : '' %>"><i class="fas fa-users"></i> Patients</a></li>
+                <li><a href="/admin/appointments" class="<%= currentPath === '/admin/appointments' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+                <li><a href="/admin/bulletins" class="<%= currentPath === '/admin/bulletins' ? 'active' : '' %>"><i class="fas fa-bullhorn"></i> Bulletins</a></li>
+            <% } else if (user && user.role === 'doctor') { %>
+                <li><a href="/admin/dashboard" class="<%= currentPath === '/admin/dashboard' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> Doctor Dashboard</a></li>
+                <li><a href="/admin/appointments" class="<%= currentPath === '/admin/appointments' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+                <li><a href="/admin/prescriptions" class="<%= currentPath === '/admin/prescriptions' ? 'active' : '' %>"><i class="fas fa-file-prescription"></i> Prescriptions</a></li>
+                <li><a href="/admin/feedback" class="<%= currentPath === '/admin/feedback' ? 'active' : '' %>"><i class="fas fa-comments"></i> Feedback</a></li>
+            <% } else if (user && user.role === 'patient') { %>
+                <li><a href="/" class="<%= currentPath === '/' ? 'active' : '' %>"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="/patient/dashboard" class="<%= currentPath === '/patient/dashboard' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="/patient/appointments" class="<%= currentPath === '/patient/appointments' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
+                <li><a href="/patient/prescriptions" class="<%= currentPath === '/patient/prescriptions' ? 'active' : '' %>"><i class="fas fa-file-prescription"></i> My Prescriptions</a></li>
+                <li><a href="/patient/medical-records" class="<%= currentPath === '/patient/medical-records' ? 'active' : '' %>"><i class="fas fa-notes-medical"></i> Medical Records</a></li>
+            <% } else { %>
+                <li><a href="/" class="<%= currentPath === '/' ? 'active' : '' %>"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="/team" class="<%= currentPath === '/team' ? 'active' : '' %>"><i class="fas fa-user-md"></i> Team</a></li>
+                <li><a href="/schedule" class="<%= currentPath === '/schedule' ? 'active' : '' %>"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+                <li><a href="/facilities" class="<%= currentPath === '/facilities' ? 'active' : '' %>"><i class="fas fa-hospital-alt"></i> Facilities</a></li>
+                <li><a href="/information" class="<%= currentPath === '/information' ? 'active' : '' %>"><i class="fas fa-info-circle"></i> Info</a></li>
+            <% } %>
+            <% if (user && user.role === 'patient') { %>
+                <li><a href="/appointments/book" class="nav-book-btn"><i class="fas fa-calendar-plus"></i> Book Appointment</a></li>
+            <% } %>
+            <% if (user) { %>
+                <li class="nav-dropdown">
+                    <a href="#" class="dropdown-trigger"><i class="fas fa-user-circle"></i> My Account <i class="fas fa-chevron-down"></i></a>
+                    <ul class="dropdown-menu">
+                        <% if (user.role === 'admin' || user.role === 'doctor') { %>
+                            <li><a href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+                            <li><a href="/admin/appointments"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+                            <li><a href="/admin/prescriptions"><i class="fas fa-file-prescription"></i> Prescriptions</a></li>
+                            <li><a href="/admin/feedback"><i class="fas fa-comments"></i> Feedback</a></li>
+                            <li class="divider"></li>
+                        <% } else { %>
+                            <li><a href="/patient/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                            <li><a href="/patient/appointments"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
+                            <li><a href="/patient/prescriptions"><i class="fas fa-file-prescription"></i> My Prescriptions</a></li>
+                            <li><a href="/patient/medical-records"><i class="fas fa-notes-medical"></i> Medical Records</a></li>
+                            <li><a href="/patient/profile"><i class="fas fa-user-edit"></i> Profile</a></li>
+                            <li class="divider"></li>
+                        <% } %>
+                        <li><a href="/feedback"><i class="fas fa-comment-dots"></i> Feedback</a></li>
+                        <li><a href="/auth/logout" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </li>
+            <% } else { %>
+                <li><a href="/auth/login" class="nav-book-btn"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+            <% } %>
+        </ul>
+    </div>
+</nav>
+
+<!-- Flash Messages -->
+<% if (success && success.length > 0) { %>
+    <div class="flash-container">
+        <% success.forEach(msg => { %>
+            <div class="flash flash-success">
+                <i class="fas fa-check-circle"></i> <%= msg %>
+                <button class="flash-close">&times;</button>
+            </div>
+        <% }) %>
+    </div>
+<% } %>
+<% if (error && error.length > 0) { %>
+    <div class="flash-container">
+        <% error.forEach(msg => { %>
+            <div class="flash flash-error">
+                <i class="fas fa-exclamation-circle"></i> <%= msg %>
+                <button class="flash-close">&times;</button>
+            </div>
+        <% }) %>
+    </div>
+<% } %>

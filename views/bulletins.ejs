@@ -1,0 +1,43 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-bullhorn"></i> Health Bulletins</h1>
+        <p>Important health advisories and tips from our medical team</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <% if (bulletins && bulletins.length > 0) { %>
+            <div class="bulletins-list">
+                <% bulletins.forEach(bulletin => { %>
+                    <div class="bulletin-detail-card">
+                        <div class="bulletin-detail-header">
+                            <span class="badge badge-<%= bulletin.category === 'hygiene' ? 'warning' : bulletin.category === 'mental-health' ? 'info' : 'primary' %>">
+                                <%= bulletin.category %>
+                            </span>
+                            <span class="bulletin-date"><%= new Date(bulletin.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+                        </div>
+                        <h3><%= bulletin.title %></h3>
+                        <div class="bulletin-content">
+                            <%= bulletin.content.split('\n').map(p => '<p>' + p + '</p>').join('') %>
+                        </div>
+                        <div class="bulletin-footer">
+                            <span>&mdash; <%= bulletin.author %></span>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <i class="fas fa-bullhorn"></i>
+                <h3>No bulletins available</h3>
+                <p>Health bulletins will be posted here regularly.</p>
+            </div>
+        <% } %>
+    </div>
+</section>
+
+<%- include('partials/footer') %>

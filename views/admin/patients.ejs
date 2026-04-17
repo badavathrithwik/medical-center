@@ -1,0 +1,80 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header page-header-dark">
+    <div class="container">
+        <div class="page-header-row">
+            <div>
+                <h1><i class="fas fa-users"></i> Patients</h1>
+                <p>View and manage all registered patients</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <!-- Search -->
+        <div class="card mb-2">
+            <div class="card-body">
+                <form action="/admin/patients" method="GET" class="search-form">
+                    <div class="search-input-group">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" class="form-control" placeholder="Search by name, email, or roll number..." value="<%= search %>">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <% if (search) { %>
+                        <a href="/admin/patients" class="btn btn-outline">Clear</a>
+                    <% } %>
+                </form>
+            </div>
+        </div>
+
+        <!-- Patients Table -->
+        <div class="card">
+            <div class="card-body">
+                <% if (patients && patients.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Roll Number</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Phone</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% patients.forEach(patient => { %>
+                                    <tr>
+                                        <td><strong><%= patient.name %></strong></td>
+                                        <td><%= patient.roll_number || 'N/A' %></td>
+                                        <td><%= patient.email %></td>
+                                        <td><%= patient.department || 'N/A' %></td>
+                                        <td><%= patient.phone || 'N/A' %></td>
+                                        <td>
+                                            <a href="/admin/patients/<%= patient.id %>" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted">Showing <%= patients.length %> patient(s)</p>
+                <% } else { %>
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No patients found</h3>
+                        <p><%= search ? 'No patients match your search criteria.' : 'No patients registered yet.' %></p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

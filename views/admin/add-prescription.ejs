@@ -1,0 +1,141 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header page-header-dark">
+    <div class="container">
+        <h1><i class="fas fa-file-prescription"></i> Add Prescription</h1>
+        <p>Create a new prescription for a patient</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="card" style="max-width: 900px; margin: 0 auto;">
+            <div class="card-body">
+                <form action="/admin/prescriptions" method="POST" id="prescriptionForm">
+                    <% if (appointment) { %>
+                        <input type="hidden" name="appointment_id" value="<%= appointment.id %>">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Linked to appointment: <strong><%= appointment.patient_name %></strong> with <strong><%= appointment.doctor_name %></strong>
+                            on <%= new Date(appointment.appointment_date).toLocaleDateString('en-IN') %>
+                            <% if (appointment.symptoms) { %>
+                                <br><strong>Symptoms:</strong> <%= appointment.symptoms %>
+                            <% } %>
+                        </div>
+                    <% } %>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patient_id"><i class="fas fa-user"></i> Patient *</label>
+                            <select id="patient_id" name="patient_id" class="form-control" required>
+                                <option value="">Select Patient</option>
+                                <% patients.forEach(p => { %>
+                                    <option value="<%= p.id %>" <%= appointment && appointment.patient_id === p.id ? 'selected' : '' %>>
+                                        <%= p.name %> (<%= p.roll_number || p.email %>)
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="doctor_id"><i class="fas fa-user-md"></i> Doctor *</label>
+                            <select id="doctor_id" name="doctor_id" class="form-control" required>
+                                <option value="">Select Doctor</option>
+                                <% doctors.forEach(d => { %>
+                                    <option value="<%= d.id %>" <%= appointment && appointment.doctor_id === d.id ? 'selected' : '' %>>
+                                        <%= d.name %> (<%= d.specialization %>)
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="diagnosis"><i class="fas fa-diagnoses"></i> Diagnosis *</label>
+                        <textarea id="diagnosis" name="diagnosis" class="form-control" rows="3" placeholder="Enter diagnosis details..." required></textarea>
+                    </div>
+
+                    <!-- Medicines Section -->
+                    <div class="medicines-section">
+                        <h4><i class="fas fa-pills"></i> Medicines</h4>
+                        <div id="medicinesList">
+                            <div class="medicine-row">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Medicine Name</label>
+                                        <input type="text" name="medicine_name[]" class="form-control" placeholder="e.g., Paracetamol 500mg">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Dosage</label>
+                                        <input type="text" name="medicine_dosage[]" class="form-control" placeholder="e.g., 1 tablet">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Frequency</label>
+                                        <input type="text" name="medicine_frequency[]" class="form-control" placeholder="e.g., 3 times/day">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Duration</label>
+                                        <input type="text" name="medicine_duration[]" class="form-control" placeholder="e.g., 5 days">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline" id="addMedicine">
+                            <i class="fas fa-plus"></i> Add Another Medicine
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tests_recommended"><i class="fas fa-vial"></i> Tests Recommended</label>
+                        <textarea id="tests_recommended" name="tests_recommended" class="form-control" rows="2" placeholder="e.g., CBC, Blood Sugar, X-Ray"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="instructions"><i class="fas fa-clipboard-list"></i> Instructions</label>
+                        <textarea id="instructions" name="instructions" class="form-control" rows="3" placeholder="Special instructions for the patient..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="follow_up_date"><i class="fas fa-calendar-plus"></i> Follow-up Date</label>
+                        <input type="date" id="follow_up_date" name="follow_up_date" class="form-control">
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="/admin/prescriptions" class="btn btn-outline">Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Prescription</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('addMedicine').addEventListener('click', function() {
+    const list = document.getElementById('medicinesList');
+    const row = document.createElement('div');
+    row.className = 'medicine-row';
+    row.innerHTML = `
+        <div class="form-row">
+            <div class="form-group">
+                <input type="text" name="medicine_name[]" class="form-control" placeholder="Medicine name">
+            </div>
+            <div class="form-group">
+                <input type="text" name="medicine_dosage[]" class="form-control" placeholder="Dosage">
+            </div>
+            <div class="form-group">
+                <input type="text" name="medicine_frequency[]" class="form-control" placeholder="Frequency">
+            </div>
+            <div class="form-group">
+                <input type="text" name="medicine_duration[]" class="form-control" placeholder="Duration">
+            </div>
+            <button type="button" class="btn btn-sm btn-danger remove-medicine" onclick="this.closest('.medicine-row').remove()">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    list.appendChild(row);
+});
+</script>
+
+<%- include('../partials/footer') %>

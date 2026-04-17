@@ -1,0 +1,196 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header page-header-dark">
+    <div class="container">
+        <h1><i class="fas fa-user"></i> <%= patient.name %></h1>
+        <p><%= patient.roll_number || '' %> | <%= patient.department || '' %> | <%= patient.email %></p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="patient-detail-grid">
+            <!-- Patient Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-id-card"></i> Personal Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="info-list">
+                        <div class="info-item"><strong>Name:</strong> <%= patient.name %></div>
+                        <div class="info-item"><strong>Email:</strong> <%= patient.email %></div>
+                        <div class="info-item"><strong>Phone:</strong> <%= patient.phone || 'N/A' %></div>
+                        <div class="info-item"><strong>Roll Number:</strong> <%= patient.roll_number || 'N/A' %></div>
+                        <div class="info-item"><strong>Department:</strong> <%= patient.department || 'N/A' %></div>
+                        <div class="info-item"><strong>Gender:</strong> <%= patient.gender || 'N/A' %></div>
+                        <div class="info-item"><strong>Date of Birth:</strong> <%= patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('en-IN') : 'N/A' %></div>
+                        <div class="info-item"><strong>Registered:</strong> <%= new Date(patient.created_at).toLocaleDateString('en-IN') %></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Record -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-notes-medical"></i> Medical Record</h3>
+                </div>
+                <div class="card-body">
+                    <% if (medicalRecord) { %>
+                        <div class="info-list">
+                            <div class="info-item"><strong>Blood Group:</strong> <%= medicalRecord.blood_group || 'N/A' %></div>
+                            <div class="info-item"><strong>Height:</strong> <%= medicalRecord.height_cm ? medicalRecord.height_cm + ' cm' : 'N/A' %></div>
+                            <div class="info-item"><strong>Weight:</strong> <%= medicalRecord.weight_kg ? medicalRecord.weight_kg + ' kg' : 'N/A' %></div>
+                            <div class="info-item"><strong>Allergies:</strong> <%= medicalRecord.allergies || 'None reported' %></div>
+                            <div class="info-item"><strong>Chronic Conditions:</strong> <%= medicalRecord.chronic_conditions || 'None reported' %></div>
+                            <div class="info-item"><strong>Current Medications:</strong> <%= medicalRecord.current_medications || 'None' %></div>
+                            <div class="info-item"><strong>Emergency Contact:</strong> <%= medicalRecord.emergency_contact_name || 'N/A' %> (<%= medicalRecord.emergency_contact_relation || '' %>) - <%= medicalRecord.emergency_contact_phone || '' %></div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">No medical record on file.</p>
+                    <% } %>
+
+                    <!-- Update Medical Record Form -->
+                    <details class="mt-2">
+                        <summary class="btn btn-sm btn-outline"><i class="fas fa-edit"></i> Update Medical Record</summary>
+                        <form action="/admin/patients/<%= patient.id %>/medical-record" method="POST" class="mt-1">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Blood Group</label>
+                                    <select name="blood_group" class="form-control">
+                                        <option value="">Select</option>
+                                        <% ['A+','A-','B+','B-','AB+','AB-','O+','O-'].forEach(bg => { %>
+                                            <option value="<%= bg %>" <%= medicalRecord && medicalRecord.blood_group === bg ? 'selected' : '' %>><%= bg %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Height (cm)</label>
+                                    <input type="number" name="height_cm" class="form-control" step="0.1" value="<%= medicalRecord ? medicalRecord.height_cm || '' : '' %>">
+                                </div>
+                                <div class="form-group">
+                                    <label>Weight (kg)</label>
+                                    <input type="number" name="weight_kg" class="form-control" step="0.1" value="<%= medicalRecord ? medicalRecord.weight_kg || '' : '' %>">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Allergies</label>
+                                <textarea name="allergies" class="form-control" rows="2"><%= medicalRecord ? medicalRecord.allergies || '' : '' %></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Chronic Conditions</label>
+                                <textarea name="chronic_conditions" class="form-control" rows="2"><%= medicalRecord ? medicalRecord.chronic_conditions || '' : '' %></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Current Medications</label>
+                                <textarea name="current_medications" class="form-control" rows="2"><%= medicalRecord ? medicalRecord.current_medications || '' : '' %></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Emergency Contact Name</label>
+                                    <input type="text" name="emergency_contact_name" class="form-control" value="<%= medicalRecord ? medicalRecord.emergency_contact_name || '' : '' %>">
+                                </div>
+                                <div class="form-group">
+                                    <label>Emergency Contact Phone</label>
+                                    <input type="text" name="emergency_contact_phone" class="form-control" value="<%= medicalRecord ? medicalRecord.emergency_contact_phone || '' : '' %>">
+                                </div>
+                                <div class="form-group">
+                                    <label>Relation</label>
+                                    <input type="text" name="emergency_contact_relation" class="form-control" value="<%= medicalRecord ? medicalRecord.emergency_contact_relation || '' : '' %>">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Medical Record</button>
+                        </form>
+                    </details>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments History -->
+        <div class="card mt-2">
+            <div class="card-header">
+                <h3><i class="fas fa-calendar-check"></i> Appointment History</h3>
+                <a href="/admin/prescriptions/add?patient_id=<%= patient.id %>" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Add Prescription</a>
+            </div>
+            <div class="card-body">
+                <% if (appointments && appointments.length > 0) { %>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Doctor</th>
+                                    <th>Specialization</th>
+                                    <th>Symptoms</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% appointments.forEach(apt => { %>
+                                    <tr>
+                                        <td><%= new Date(apt.appointment_date).toLocaleDateString('en-IN') %></td>
+                                        <td><%= apt.doctor_name %></td>
+                                        <td><%= apt.specialization %></td>
+                                        <td><%= apt.symptoms ? apt.symptoms.substring(0, 50) + (apt.symptoms.length > 50 ? '...' : '') : 'N/A' %></td>
+                                        <td>
+                                            <span class="badge badge-<%= apt.status === 'confirmed' ? 'success' : apt.status === 'pending' ? 'warning' : apt.status === 'completed' ? 'info' : 'danger' %>">
+                                                <%= apt.status %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <% if (apt.status !== 'completed') { %>
+                                                <a href="/admin/prescriptions/add?appointment_id=<%= apt.id %>" class="btn btn-sm btn-outline"><i class="fas fa-file-prescription"></i></a>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p class="text-muted text-center">No appointments found.</p>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Prescriptions History -->
+        <div class="card mt-2">
+            <div class="card-header">
+                <h3><i class="fas fa-file-prescription"></i> Prescription History</h3>
+            </div>
+            <div class="card-body">
+                <% if (prescriptions && prescriptions.length > 0) { %>
+                    <% prescriptions.forEach(rx => { %>
+                        <div class="prescription-card">
+                            <div class="rx-card-header">
+                                <div>
+                                    <strong>Diagnosis:</strong> <%= rx.diagnosis %>
+                                    <br><span class="text-muted">By <%= rx.doctor_name %> | <%= new Date(rx.created_at).toLocaleDateString('en-IN') %></span>
+                                </div>
+                                <a href="/admin/prescriptions/<%= rx.id %>" class="btn btn-sm btn-outline">View Details</a>
+                            </div>
+                            <div class="rx-medicines">
+                                <strong>Medicines:</strong>
+                                <% const meds = typeof rx.medicines === 'string' ? JSON.parse(rx.medicines) : rx.medicines; %>
+                                <% if (meds && meds.length > 0) { %>
+                                    <ul>
+                                        <% meds.forEach(med => { %>
+                                            <li><%= med.name %> - <%= med.dosage %> (<%= med.frequency %>, <%= med.duration %>)</li>
+                                        <% }) %>
+                                    </ul>
+                                <% } else { %>
+                                    <span class="text-muted">No medicines prescribed</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p class="text-muted text-center">No prescriptions found.</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

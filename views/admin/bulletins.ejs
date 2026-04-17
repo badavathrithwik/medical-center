@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header page-header-dark">
+    <div class="container">
+        <h1><i class="fas fa-bullhorn"></i> Health Bulletins</h1>
+        <p>Manage health bulletins and announcements</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <!-- Create New Bulletin -->
+        <div class="card mb-2">
+            <div class="card-header">
+                <h3><i class="fas fa-plus"></i> New Bulletin</h3>
+            </div>
+            <div class="card-body">
+                <form action="/admin/bulletins" method="POST">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label>Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="Bulletin title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select name="category" class="form-control">
+                                <option value="general">General</option>
+                                <option value="hygiene">Hygiene</option>
+                                <option value="wellness">Wellness</option>
+                                <option value="mental-health">Mental Health</option>
+                                <option value="alert">Alert</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea name="content" class="form-control" rows="4" placeholder="Write the bulletin content..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Publish Bulletin</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Existing Bulletins -->
+        <% if (bulletins && bulletins.length > 0) { %>
+            <% bulletins.forEach(b => { %>
+                <div class="card mb-1">
+                    <div class="card-body">
+                        <div class="prescription-row">
+                            <div class="rx-main">
+                                <span class="badge badge-primary"><%= b.category %></span>
+                                <h4><%= b.title %></h4>
+                                <p><%= b.content.substring(0, 200) %><%= b.content.length > 200 ? '...' : '' %></p>
+                                <span class="text-muted">By <%= b.author %> | <%= new Date(b.created_at).toLocaleDateString('en-IN') %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

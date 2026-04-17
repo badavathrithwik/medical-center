@@ -1,0 +1,134 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1>Your Health, Our Priority</h1>
+        <p>Dedicated to providing accessible, high-quality healthcare for the IIT Ropar community</p>
+        <div class="hero-buttons">
+            <a href="/appointments/book" class="btn btn-primary btn-lg"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+            <a href="/team" class="btn btn-outline btn-lg"><i class="fas fa-user-md"></i> Meet Our Doctors</a>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Access Cards -->
+<section class="section quick-access">
+    <div class="container">
+        <div class="quick-cards">
+            <a href="/schedule" class="quick-card">
+                <div class="quick-card-icon blue">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h3>Latest News & Events</h3>
+                <p>Stay updated with health news</p>
+            </a>
+            <a href="/schedule" class="quick-card">
+                <div class="quick-card-icon green">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3>Schedule</h3>
+                <p>View doctor schedules & timings</p>
+            </a>
+            <a href="/facilities" class="quick-card">
+                <div class="quick-card-icon orange">
+                    <i class="fas fa-hospital-alt"></i>
+                </div>
+                <h3>Facilities</h3>
+                <p>Explore our medical facilities</p>
+            </a>
+            <a href="/appointments/book" class="quick-card">
+                <div class="quick-card-icon red">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h3>Book Appointment</h3>
+                <p>Schedule your visit online</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- About & Bulletin Row -->
+<section class="section">
+    <div class="container">
+        <div class="about-bulletin-grid">
+            <!-- About -->
+            <div class="about-section">
+                <h2 class="section-title">About the Medical Center &mdash; IIT Ropar</h2>
+                <p>The Health Center at IIT Ropar is dedicated to promoting the physical, mental, and emotional well-being of all members of the campus community, including students, faculty, and staff. Our mission is to provide accessible, high-quality, and compassionate healthcare services that support the overall health and success of the institute&rsquo;s members.</p>
+                <p>We offer a comprehensive range of integrated services such as general medical care for common illnesses and minor injuries, preventive health check-ups and screenings to support long-term wellness, and mental health and counseling services to provide emotional and psychological support.</p>
+                <p>The Health Center operates with the goal of reducing the impact of illness and injury on academic and professional performance by providing timely and effective care. We strive to ensure that your health needs are met efficiently, so you can focus on what matters most&mdash;your studies, research, work, and personal growth.</p>
+                <p>We are here not only to treat illness but to <strong>promote a culture of wellness</strong> across campus. Whether you need routine care, health advice, or emotional support, the Health Center is your partner in health at IIT Ropar.</p>
+            </div>
+
+            <!-- Health Bulletin -->
+            <div class="bulletin-section">
+                <div class="bulletin-card">
+                    <div class="bulletin-header">
+                        <h3><i class="fas fa-bullhorn"></i> Health Bulletin</h3>
+                    </div>
+                    <div class="bulletin-body">
+                        <% if (bulletins && bulletins.length > 0) { %>
+                            <% bulletins.slice(0, 2).forEach(bulletin => { %>
+                                <div class="bulletin-item">
+                                    <h4><%= bulletin.title %></h4>
+                                    <p><%= bulletin.content.substring(0, 200) %><%= bulletin.content.length > 200 ? '...' : '' %></p>
+                                    <span class="bulletin-author">&mdash; <%= bulletin.author %></span>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <p class="text-muted">No bulletins available.</p>
+                        <% } %>
+                        <a href="/bulletins" class="btn btn-sm btn-outline">View All Bulletins</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Our Doctors -->
+<section class="section section-gray">
+    <div class="container">
+        <h2 class="section-title text-center">Our Medical Team</h2>
+        <p class="section-subtitle text-center">Expert doctors available to help with your health needs</p>
+        <div class="doctors-grid">
+            <% if (doctors && doctors.length > 0) { %>
+                <% doctors.forEach(doctor => { %>
+                    <div class="doctor-card">
+                        <div class="doctor-avatar">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h3><%= doctor.name %></h3>
+                        <span class="doctor-spec"><%= doctor.specialization %></span>
+                        <p class="doctor-qual"><%= doctor.qualification %></p>
+                        <p class="doctor-exp"><%= doctor.experience_years %> years experience</p>
+                        <a href="/appointments/book?doctor=<%= doctor.id %>" class="btn btn-primary btn-sm">Book Appointment</a>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <p class="text-center text-muted">Doctor information coming soon.</p>
+            <% } %>
+        </div>
+    </div>
+</section>
+
+<!-- Emergency Banner -->
+<section class="emergency-banner">
+    <div class="container">
+        <div class="emergency-inner">
+            <div class="emergency-text">
+                <h2><i class="fas fa-ambulance"></i> 24/7 Emergency & Ambulance Service</h2>
+                <p>For medical emergencies, call us immediately. Our emergency team is available round the clock.</p>
+            </div>
+            <div class="emergency-contacts">
+                <a href="tel:01881235193" class="emergency-phone"><i class="fas fa-phone-alt"></i> 01881-235193</a>
+                <a href="tel:01881235187" class="emergency-phone"><i class="fas fa-phone-alt"></i> 01881-235187</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('partials/footer') %>

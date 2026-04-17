@@ -1,0 +1,67 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header page-header-dark">
+    <div class="container">
+        <h1><i class="fas fa-comments"></i> Feedback</h1>
+        <p>Patient feedback and suggestions</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <% if (feedback && feedback.length > 0) { %>
+            <% feedback.forEach(fb => { %>
+                <div class="card mb-1">
+                    <div class="card-body">
+                        <div class="feedback-row">
+                            <div class="feedback-main">
+                                <div class="feedback-header">
+                                    <strong><%= fb.is_anonymous ? 'Anonymous' : (fb.user_name || 'Unknown') %></strong>
+                                    <span class="text-muted"><%= new Date(fb.created_at).toLocaleDateString('en-IN') %></span>
+                                    <span class="badge badge-<%= fb.status === 'resolved' ? 'success' : fb.status === 'reviewed' ? 'info' : 'warning' %>"><%= fb.status %></span>
+                                </div>
+                                <% if (fb.subject) { %><h4><%= fb.subject %></h4><% } %>
+                                <p><%= fb.message %></p>
+                                <div class="stars">
+                                    <% for (let i = 1; i <= 5; i++) { %>
+                                        <i class="fas fa-star <%= i <= fb.rating ? 'star-filled' : 'star-empty' %>"></i>
+                                    <% } %>
+                                </div>
+                                <% if (fb.admin_response) { %>
+                                    <div class="admin-response">
+                                        <strong><i class="fas fa-reply"></i> Admin Response:</strong>
+                                        <p><%= fb.admin_response %></p>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <div class="feedback-actions">
+                                <form action="/admin/feedback/<%= fb.id %>/respond" method="POST">
+                                    <div class="form-group">
+                                        <select name="status" class="form-control form-control-sm">
+                                            <option value="pending" <%= fb.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                            <option value="reviewed" <%= fb.status === 'reviewed' ? 'selected' : '' %>>Reviewed</option>
+                                            <option value="resolved" <%= fb.status === 'resolved' ? 'selected' : '' %>>Resolved</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <textarea name="admin_response" class="form-control form-control-sm" rows="2" placeholder="Your response..."><%= fb.admin_response || '' %></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>No feedback yet</h3>
+                <p>Patient feedback will appear here.</p>
+            </div>
+        <% } %>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

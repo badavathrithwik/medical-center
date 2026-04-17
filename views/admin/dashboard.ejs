@@ -1,0 +1,137 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header page-header-dark">
+    <div class="container">
+        <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+        <p>Overview of medical center operations</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card stat-blue">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-info">
+                    <h3><%= stats.totalPatients %></h3>
+                    <p>Total Patients</p>
+                </div>
+            </div>
+            <div class="stat-card stat-green">
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-info">
+                    <h3><%= stats.totalAppointments %></h3>
+                    <p>Total Appointments</p>
+                </div>
+            </div>
+            <div class="stat-card stat-orange">
+                <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+                <div class="stat-info">
+                    <h3><%= stats.todayAppointments %></h3>
+                    <p>Today's Appointments</p>
+                </div>
+            </div>
+            <div class="stat-card stat-red">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-info">
+                    <h3><%= stats.pendingAppointments %></h3>
+                    <p>Pending Appointments</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="admin-actions">
+            <a href="/admin/patients" class="action-card">
+                <i class="fas fa-users"></i>
+                <span>View Patients</span>
+            </a>
+            <a href="/admin/appointments" class="action-card">
+                <i class="fas fa-calendar-check"></i>
+                <span>Manage Appointments</span>
+            </a>
+            <a href="/admin/prescriptions/add" class="action-card">
+                <i class="fas fa-file-prescription"></i>
+                <span>New Prescription</span>
+            </a>
+            <a href="/admin/prescriptions" class="action-card">
+                <i class="fas fa-clipboard-list"></i>
+                <span>All Prescriptions</span>
+            </a>
+            <a href="/admin/feedback" class="action-card">
+                <i class="fas fa-comments"></i>
+                <span>View Feedback</span>
+            </a>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Recent Appointments -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Recent Appointments</h3>
+                    <a href="/admin/appointments" class="btn btn-sm btn-outline">View All</a>
+                </div>
+                <div class="card-body">
+                    <% if (appointments && appointments.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Patient</th>
+                                        <th>Doctor</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% appointments.forEach(apt => { %>
+                                        <tr>
+                                            <td><%= apt.patient_name %> <span class="text-muted">(<%= apt.roll_number %>)</span></td>
+                                            <td><%= apt.doctor_name %></td>
+                                            <td><%= new Date(apt.appointment_date).toLocaleDateString('en-IN') %></td>
+                                            <td>
+                                                <span class="badge badge-<%= apt.status === 'confirmed' ? 'success' : apt.status === 'pending' ? 'warning' : apt.status === 'completed' ? 'info' : 'danger' %>">
+                                                    <%= apt.status %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted text-center">No recent appointments.</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Recent Prescriptions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-file-prescription"></i> Recent Prescriptions</h3>
+                    <a href="/admin/prescriptions" class="btn btn-sm btn-outline">View All</a>
+                </div>
+                <div class="card-body">
+                    <% if (prescriptions && prescriptions.length > 0) { %>
+                        <% prescriptions.forEach(rx => { %>
+                            <div class="prescription-mini">
+                                <div class="rx-header">
+                                    <strong><%= rx.patient_name %></strong>
+                                    <span class="text-muted"><%= new Date(rx.created_at).toLocaleDateString('en-IN') %></span>
+                                </div>
+                                <p class="rx-diagnosis"><%= rx.diagnosis.substring(0, 80) %><%= rx.diagnosis.length > 80 ? '...' : '' %></p>
+                                <span class="text-muted">By <%= rx.doctor_name %></span>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p class="text-muted text-center">No prescriptions yet.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

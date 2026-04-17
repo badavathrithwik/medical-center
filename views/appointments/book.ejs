@@ -1,0 +1,269 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-calendar-plus"></i> Book an Appointment</h1>
+        <p>Choose a doctor based on your condition and select a convenient time slot</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <!-- Step 1: Choose Doctor -->
+        <div class="booking-steps">
+            <div class="step active" data-step="1">
+                <span class="step-num">1</span>
+                <span class="step-label">Choose Doctor</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" data-step="2">
+                <span class="step-num">2</span>
+                <span class="step-label">Select Date & Time</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" data-step="3">
+                <span class="step-num">3</span>
+                <span class="step-label">Confirm Booking</span>
+            </div>
+        </div>
+
+        <form action="/appointments/book" method="POST" id="bookingForm">
+            <!-- Doctor Selection -->
+            <div class="booking-section" id="step1">
+                <h3>Select a Doctor</h3>
+                <p class="text-muted">Choose based on your medical condition</p>
+                <div class="doctor-select-grid">
+                    <% if (doctors && doctors.length > 0) { %>
+                        <% doctors.forEach(doctor => { %>
+                            <label class="doctor-select-card" for="doctor_<%= doctor.id %>">
+                                <input type="radio" id="doctor_<%= doctor.id %>" name="doctor_id" value="<%= doctor.id %>"
+                                    <%= selectedDoctor == doctor.id ? 'checked' : '' %>
+                                    data-doctor-name="<%= doctor.name %>"
+                                    data-specialization="<%= doctor.specialization %>"
+                                    required>
+                                <div class="doctor-select-inner">
+                                    <div class="doctor-select-avatar">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <h4><%= doctor.name %></h4>
+                                    <span class="badge badge-primary"><%= doctor.specialization %></span>
+                                    <p class="small"><%= doctor.qualification %></p>
+                                    <p class="small text-muted"><%= doctor.experience_years %> years experience</p>
+                                    <div class="doctor-conditions">
+                                        <% if (doctor.specialization.includes('General')) { %>
+                                            <span class="condition-tag">Fever</span>
+                                            <span class="condition-tag">Cold & Flu</span>
+                                            <span class="condition-tag">Infections</span>
+                                            <span class="condition-tag">General Checkup</span>
+                                        <% } else if (doctor.specialization.includes('Mental')) { %>
+                                            <span class="condition-tag">Stress</span>
+                                            <span class="condition-tag">Anxiety</span>
+                                            <span class="condition-tag">Depression</span>
+                                            <span class="condition-tag">Counseling</span>
+                                        <% } else if (doctor.specialization.includes('Orthop')) { %>
+                                            <span class="condition-tag">Sports Injury</span>
+                                            <span class="condition-tag">Fractures</span>
+                                            <span class="condition-tag">Joint Pain</span>
+                                            <span class="condition-tag">Back Pain</span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <div class="doctor-select-check">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </label>
+                        <% }) %>
+                    <% } %>
+                </div>
+                <button type="button" class="btn btn-primary" id="toStep2" disabled>
+                    Next: Select Date & Time <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Date & Slot Selection -->
+            <div class="booking-section hidden" id="step2">
+                <h3>Select Date & Time Slot</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="appointment_date"><i class="fas fa-calendar"></i> Appointment Date</label>
+                        <input type="date" id="appointment_date" name="appointment_date" class="form-control" required
+                            min="<%= new Date().toISOString().split('T')[0] %>">
+                    </div>
+                </div>
+
+                <div id="slotsContainer" class="slots-container">
+                    <div class="empty-state small-state">
+                        <i class="fas fa-calendar-day"></i>
+                        <p>Select a date to see available time slots</p>
+                    </div>
+                </div>
+
+                <input type="hidden" id="slot_id" name="slot_id" required>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="backToStep1">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="button" class="btn btn-primary" id="toStep3" disabled>
+                        Next: Confirm Details <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Symptoms & Confirmation -->
+            <div class="booking-section hidden" id="step3">
+                <h3>Describe Your Symptoms & Confirm</h3>
+
+                <div class="booking-summary" id="bookingSummary">
+                    <!-- Filled dynamically -->
+                </div>
+
+                <div class="form-group">
+                    <label for="symptoms"><i class="fas fa-notes-medical"></i> Describe your symptoms *</label>
+                    <textarea id="symptoms" name="symptoms" class="form-control" rows="4"
+                        placeholder="Please describe your symptoms, how long you've had them, and any relevant details..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority"><i class="fas fa-exclamation-circle"></i> Priority Level</label>
+                    <select id="priority" name="priority" class="form-control">
+                        <option value="normal">Normal - Regular consultation</option>
+                        <option value="high">High - Urgent, need early attention</option>
+                        <option value="emergency">Emergency - Severe symptoms</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="backToStep2">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-check-circle"></i> Confirm Appointment
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const doctorRadios = document.querySelectorAll('input[name="doctor_id"]');
+    const dateInput = document.getElementById('appointment_date');
+    const slotsContainer = document.getElementById('slotsContainer');
+    const slotInput = document.getElementById('slot_id');
+    const toStep2 = document.getElementById('toStep2');
+    const toStep3 = document.getElementById('toStep3');
+    const backToStep1 = document.getElementById('backToStep1');
+    const backToStep2 = document.getElementById('backToStep2');
+    const steps = document.querySelectorAll('.step');
+    const sections = {
+        step1: document.getElementById('step1'),
+        step2: document.getElementById('step2'),
+        step3: document.getElementById('step3')
+    };
+
+    let selectedDoctor = null;
+    let selectedSlot = null;
+
+    // Doctor selection
+    doctorRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectedDoctor = {
+                id: this.value,
+                name: this.dataset.doctorName,
+                specialization: this.dataset.specialization
+            };
+            toStep2.disabled = false;
+            document.querySelectorAll('.doctor-select-card').forEach(c => c.classList.remove('selected'));
+            this.closest('.doctor-select-card').classList.add('selected');
+        });
+
+        // Pre-select if doctor param exists
+        if (radio.checked) {
+            radio.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Step navigation
+    function showStep(num) {
+        Object.values(sections).forEach(s => s.classList.add('hidden'));
+        sections['step' + num].classList.remove('hidden');
+        steps.forEach(s => {
+            s.classList.remove('active', 'completed');
+            const sNum = parseInt(s.dataset.step);
+            if (sNum < num) s.classList.add('completed');
+            if (sNum === num) s.classList.add('active');
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    toStep2.addEventListener('click', () => showStep(2));
+    backToStep1.addEventListener('click', () => showStep(1));
+    toStep3.addEventListener('click', () => {
+        // Build summary
+        const dateVal = dateInput.value;
+        const dateFormatted = new Date(dateVal).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const slotText = document.querySelector('.slot-card.selected')?.querySelector('.slot-time')?.textContent || '';
+        document.getElementById('bookingSummary').innerHTML = `
+            <div class="summary-row"><strong>Doctor:</strong> ${selectedDoctor.name}</div>
+            <div class="summary-row"><strong>Specialization:</strong> ${selectedDoctor.specialization}</div>
+            <div class="summary-row"><strong>Date:</strong> ${dateFormatted}</div>
+            <div class="summary-row"><strong>Time Slot:</strong> ${slotText}</div>
+        `;
+        showStep(3);
+    });
+    backToStep2.addEventListener('click', () => showStep(2));
+
+    // Fetch slots on date change
+    dateInput.addEventListener('change', async function() {
+        if (!selectedDoctor || !this.value) return;
+
+        slotsContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading available slots...</div>';
+        toStep3.disabled = true;
+        slotInput.value = '';
+
+        try {
+            const res = await fetch(`/appointments/slots/${selectedDoctor.id}/${this.value}`);
+            const data = await res.json();
+
+            if (data.slots && data.slots.length > 0) {
+                let html = '<div class="slots-grid">';
+                data.slots.forEach(slot => {
+                    const start = slot.start_time.substring(0, 5);
+                    const end = slot.end_time.substring(0, 5);
+                    html += `
+                        <div class="slot-card" data-slot-id="${slot.id}" onclick="selectSlot(this, ${slot.id})">
+                            <div class="slot-time">${start} - ${end}</div>
+                            <div class="slot-info">${slot.remaining} spots left</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                slotsContainer.innerHTML = html;
+            } else {
+                slotsContainer.innerHTML = `
+                    <div class="empty-state small-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <p>No available slots on this date. The doctor may not be available or all slots are full.</p>
+                        <p class="text-muted">Try selecting a different date.</p>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            slotsContainer.innerHTML = '<div class="flash flash-error">Failed to load slots. Please try again.</div>';
+        }
+    });
+
+    // Select slot
+    window.selectSlot = function(el, slotId) {
+        document.querySelectorAll('.slot-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        slotInput.value = slotId;
+        toStep3.disabled = false;
+    };
+});
+</script>
+
+<%- include('../partials/footer') %>

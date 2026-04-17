@@ -1,0 +1,73 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-user-edit"></i> My Profile</h1>
+        <p>Update your personal information</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="card" style="max-width: 700px; margin: 0 auto;">
+            <div class="card-body">
+                <form action="/patient/profile" method="POST">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Full Name</label>
+                        <input type="text" name="name" class="form-control" value="<%= profile.name %>" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" class="form-control" value="<%= profile.email %>" disabled>
+                        <small class="text-muted">Email cannot be changed</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-phone"></i> Phone</label>
+                            <input type="tel" name="phone" class="form-control" value="<%= profile.phone || '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-building"></i> Department</label>
+                            <select name="department" class="form-control">
+                                <option value="">Select Department</option>
+                                <% ['Computer Science','Electrical Engineering','Mechanical Engineering','Civil Engineering','Chemical Engineering','Metallurgical & Materials','Mathematics','Physics','Chemistry','Humanities & Social Sciences','Biomedical Engineering'].forEach(dept => { %>
+                                    <option value="<%= dept %>" <%= profile.department === dept ? 'selected' : '' %>><%= dept %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-venus-mars"></i> Gender</label>
+                            <select name="gender" class="form-control">
+                                <option value="">Select</option>
+                                <option value="Male" <%= profile.gender === 'Male' ? 'selected' : '' %>>Male</option>
+                                <option value="Female" <%= profile.gender === 'Female' ? 'selected' : '' %>>Female</option>
+                                <option value="Other" <%= profile.gender === 'Other' ? 'selected' : '' %>>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="form-control"
+                                value="<%= profile.date_of_birth ? new Date(profile.date_of_birth).toISOString().split('T')[0] : '' %>">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-id-badge"></i> Roll Number</label>
+                        <input type="text" class="form-control" value="<%= profile.roll_number || '' %>" disabled>
+                        <small class="text-muted">Contact admin to update roll number</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,73 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-calendar-alt"></i> Doctor Schedule</h1>
+        <p>View availability and consultation timings of our doctors</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <% const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; %>
+
+        <% if (doctors && doctors.length > 0) { %>
+            <% doctors.forEach(doctor => { %>
+                <div class="schedule-card">
+                    <div class="schedule-header">
+                        <h2><i class="fas fa-user-md"></i> <%= doctor.name %></h2>
+                        <span class="badge badge-primary"><%= doctor.specialization %></span>
+                    </div>
+                    <div class="schedule-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Time Slot</th>
+                                    <th>Max Patients</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (doctor.slots && doctor.slots.length > 0) { %>
+                                    <% doctor.slots.forEach(slot => { %>
+                                        <tr>
+                                            <td><strong><%= dayNames[slot.day_of_week] %></strong></td>
+                                            <td>
+                                                <%= slot.start_time.substring(0,5) %> - <%= slot.end_time.substring(0,5) %>
+                                            </td>
+                                            <td><%= slot.max_patients %> patients</td>
+                                            <td>
+                                                <% if (slot.is_available) { %>
+                                                    <span class="badge badge-success">Available</span>
+                                                <% } else { %>
+                                                    <span class="badge badge-danger">Unavailable</span>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="4" class="text-center text-muted">No schedule available</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="schedule-footer">
+                        <a href="/appointments/book?doctor=<%= doctor.id %>" class="btn btn-primary btn-sm">
+                            <i class="fas fa-calendar-plus"></i> Book with <%= doctor.name %>
+                        </a>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <h3>No schedules available</h3>
+                <p>Doctor schedules will be updated soon.</p>
+            </div>
+        <% } %>
+    </div>
+</section>
+
+<%- include('partials/footer') %>

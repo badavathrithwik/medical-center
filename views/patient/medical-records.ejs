@@ -1,0 +1,74 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-notes-medical"></i> My Medical Records</h1>
+        <p>Manage your medical information</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+            <div class="card-body">
+                <form action="/patient/medical-records" method="POST">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-tint"></i> Blood Group</label>
+                            <select name="blood_group" class="form-control">
+                                <option value="">Select</option>
+                                <% ['A+','A-','B+','B-','AB+','AB-','O+','O-'].forEach(bg => { %>
+                                    <option value="<%= bg %>" <%= record && record.blood_group === bg ? 'selected' : '' %>><%= bg %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-ruler-vertical"></i> Height (cm)</label>
+                            <input type="number" name="height_cm" class="form-control" step="0.1" value="<%= record ? record.height_cm || '' : '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-weight"></i> Weight (kg)</label>
+                            <input type="number" name="weight_kg" class="form-control" step="0.1" value="<%= record ? record.weight_kg || '' : '' %>">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-allergies"></i> Allergies</label>
+                        <textarea name="allergies" class="form-control" rows="2" placeholder="List any known allergies..."><%= record ? record.allergies || '' : '' %></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-heartbeat"></i> Chronic Conditions</label>
+                        <textarea name="chronic_conditions" class="form-control" rows="2" placeholder="e.g., Asthma, Diabetes..."><%= record ? record.chronic_conditions || '' : '' %></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-pills"></i> Current Medications</label>
+                        <textarea name="current_medications" class="form-control" rows="2" placeholder="List any medications you're currently taking..."><%= record ? record.current_medications || '' : '' %></textarea>
+                    </div>
+
+                    <h4 class="mt-2"><i class="fas fa-phone-alt"></i> Emergency Contact</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" name="emergency_contact_name" class="form-control" value="<%= record ? record.emergency_contact_name || '' : '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="emergency_contact_phone" class="form-control" value="<%= record ? record.emergency_contact_phone || '' : '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label>Relation</label>
+                            <input type="text" name="emergency_contact_relation" class="form-control" placeholder="e.g., Parent, Guardian" value="<%= record ? record.emergency_contact_relation || '' : '' %>">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Medical Records</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('../partials/footer') %>

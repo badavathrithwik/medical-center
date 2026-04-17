@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<section class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-user-md"></i> Our Medical Team</h1>
+        <p>Meet the dedicated healthcare professionals at IIT Ropar Medical Center</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <% if (doctors && doctors.length > 0) { %>
+            <% doctors.forEach(doctor => { %>
+                <div class="team-card">
+                    <div class="team-card-left">
+                        <div class="team-avatar">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                    </div>
+                    <div class="team-card-body">
+                        <h2><%= doctor.name %></h2>
+                        <span class="badge badge-primary"><%= doctor.specialization %></span>
+                        <div class="team-details">
+                            <p><i class="fas fa-graduation-cap"></i> <strong>Qualification:</strong> <%= doctor.qualification %></p>
+                            <p><i class="fas fa-briefcase"></i> <strong>Experience:</strong> <%= doctor.experience_years %> years</p>
+                            <% if (doctor.phone) { %>
+                                <p><i class="fas fa-phone"></i> <strong>Phone:</strong> <%= doctor.phone %></p>
+                            <% } %>
+                            <% if (doctor.email) { %>
+                                <p><i class="fas fa-envelope"></i> <strong>Email:</strong> <%= doctor.email %></p>
+                            <% } %>
+                        </div>
+                        <% if (doctor.bio) { %>
+                            <p class="team-bio"><%= doctor.bio %></p>
+                        <% } %>
+                        <a href="/appointments/book?doctor=<%= doctor.id %>" class="btn btn-primary"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="empty-state">
+                <i class="fas fa-user-md"></i>
+                <h3>No doctors listed yet</h3>
+                <p>Doctor information will be updated soon.</p>
+            </div>
+        <% } %>
+    </div>
+</section>
+
+<%- include('partials/footer') %>
