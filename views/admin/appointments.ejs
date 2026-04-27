@@ -4,7 +4,7 @@
 <section class="page-header page-header-dark">
     <div class="container">
         <h1><i class="fas fa-calendar-check"></i> Appointments</h1>
-        <p>Manage all patient appointments</p>
+        <p>Manage all patient appointments — sorted by priority</p>
     </div>
 </section>
 
@@ -67,17 +67,22 @@
                             </thead>
                             <tbody>
                                 <% appointments.forEach((apt, idx) => { %>
-                                    <tr>
+                                    <tr class="<%= apt.priority === 'emergency' ? 'priority-emergency-row' : apt.priority === 'high' ? 'priority-high-row' : '' %>">
                                         <td><%= idx + 1 %></td>
                                         <td>
                                             <a href="/admin/patients/<%= apt.patient_id %>"><strong><%= apt.patient_name %></strong></a>
                                             <br><span class="text-muted small"><%= apt.roll_number || '' %></span>
+                                            <br>
+                                            <a href="/admin/patients/<%= apt.patient_id %>" class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 8px; margin-top:4px;" title="View full visit history">
+                                                <i class="fas fa-history"></i> History
+                                            </a>
                                         </td>
                                         <td><%= apt.doctor_name %><br><span class="text-muted small"><%= apt.specialization %></span></td>
                                         <td><%= new Date(apt.appointment_date).toLocaleDateString('en-IN') %></td>
-                                        <td><%= apt.symptoms ? apt.symptoms.substring(0, 40) + (apt.symptoms.length > 40 ? '...' : '') : 'N/A' %></td>
+                                        <td><%= apt.symptoms ? apt.symptoms.substring(0, 60) + (apt.symptoms.length > 60 ? '...' : '') : 'N/A' %></td>
                                         <td>
                                             <span class="badge badge-<%= apt.priority === 'emergency' ? 'danger' : apt.priority === 'high' ? 'warning' : 'info' %>">
+                                                <% if (apt.priority === 'emergency') { %><i class="fas fa-exclamation-triangle"></i> <% } %>
                                                 <%= apt.priority %>
                                             </span>
                                         </td>
@@ -110,7 +115,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-muted">Showing <%= appointments.length %> appointment(s)</p>
+                    <p class="text-muted">Showing <%= appointments.length %> appointment(s) — sorted by priority</p>
                 <% } else { %>
                     <div class="empty-state">
                         <i class="fas fa-calendar-times"></i>
@@ -122,5 +127,10 @@
         </div>
     </div>
 </section>
+
+<style>
+.priority-emergency-row { border-left: 4px solid var(--danger); background: rgba(220, 53, 69, 0.04); }
+.priority-high-row { border-left: 4px solid var(--warning); background: rgba(253, 126, 20, 0.04); }
+</style>
 
 <%- include('../partials/footer') %>

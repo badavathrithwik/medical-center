@@ -9,13 +9,31 @@ const {
 router.get('/dashboard', isAdminOrDoctor, async (req, res) => {
     try {
         const stats = await statsQueries.getDashboardStats();
-        const recentAppointments = await appointmentQueries.getAll({ limit: 10 });
-        const recentPrescriptions = await prescriptionQueries.getAll();
+        let recentAppointments;
+        let recentPrescriptions;
+        let dashboardTitle;
+        
+        if (req.session.user.role === 'doctor') {
+            dashboardTitle = 'Doctor Dashboard';
+            const doctor = await doctorQueries.findByUserId(req.session.user.id);
+            if (doctor.rows.length > 0) {
+                const allDocAppts = await appointmentQueries.getByDoctor(doctor.rows[0].id);
+                recentAppointments = { rows: allDocAppts.rows.slice(0, 10) };
+                recentPrescriptions = await prescriptionQueries.getByDoctor(doctor.rows[0].id);
+            } else {
+                recentAppointments = { rows: [] };
+                recentPrescriptions = { rows: [] };
+            }
+        } else {
+            dashboardTitle = 'Admin Dashboard';
+            recentAppointments = await appointmentQueries.getAll({ limit: 10 });
+            recentPrescriptions = await prescriptionQueries.getAll();
+        }
 
         res.render('admin/dashboard', {
-            title: 'Admin Dashboard',
+            title: dashboardTitle,
             stats,
-            appointments: recentAppointments.rows.slice(0, 10),
+            appointments: recentAppointments.rows,
             prescriptions: recentPrescriptions.rows.slice(0, 5)
         });
     } catch (err) {
@@ -47,13 +65,13 @@ router.get('/patients', isAdminOrDoctor, async (req, res) => {
     }
 });
 
-// Patient Detail
+// Patient Detail — full visit history with prescriptions
 router.get('/patients/:id', isAdminOrDoctor, async (req, res) => {
     try {
-        const [patient, records, appointments, prescriptions] = await Promise.all([
+        const [patient, records, visitHistory, prescriptions] = await Promise.all([
             userQueries.findById(req.params.id),
             medicalRecordQueries.getByPatient(req.params.id),
-            appointmentQueries.getByPatient(req.params.id),
+            appointmentQueries.getPatientHistory(req.params.id),
             prescriptionQueries.getByPatient(req.params.id)
         ]);
 
@@ -66,7 +84,7 @@ router.get('/patients/:id', isAdminOrDoctor, async (req, res) => {
             title: `Patient: ${patient.rows[0].name}`,
             patient: patient.rows[0],
             medicalRecord: records.rows[0] || null,
-            appointments: appointments.rows,
+            appointments: visitHistory.rows,
             prescriptions: prescriptions.rows
         });
     } catch (err) {
@@ -129,7 +147,17 @@ router.post('/appointments/:id/status', isAdminOrDoctor, async (req, res) => {
 // Prescriptions list
 router.get('/prescriptions', isAdminOrDoctor, async (req, res) => {
     try {
-        const prescriptions = await prescriptionQueries.getAll();
+        let prescriptions;
+        if (req.session.user.role === 'doctor') {
+            const doctor = await doctorQueries.findByUserId(req.session.user.id);
+            if (doctor.rows.length > 0) {
+                prescriptions = await prescriptionQueries.getByDoctor(doctor.rows[0].id);
+            } else {
+                prescriptions = { rows: [] };
+            }
+        } else {
+            prescriptions = await prescriptionQueries.getAll();
+        }
         res.render('admin/prescriptions', {
             title: 'Prescriptions',
             prescriptions: prescriptions.rows
@@ -201,7 +229,50 @@ router.post('/prescriptions', isAdminOrDoctor, async (req, res) => {
             await appointmentQueries.updateStatus(appointment_id, 'completed', 'Prescription issued');
         }
 
-        req.flash('success', 'Prescription created successfully.');
+        // Auto-book follow-up appointment
+        if (follow_up_date) {
+            try {
+                const dateObj = new Date(follow_up_date);
+                const dayOfWeek = dateObj.getDay();
+                
+                const slotsResult = await doctorQueries.getAvailableSlots(doctor_id, dayOfWeek);
+                let selectedSlotId = null;
+                
+                if (slotsResult.rows.length > 0) {
+                    for (const slot of slotsResult.rows) {
+                        const countRes = await appointmentQueries.countByDateAndSlot(doctor_id, follow_up_date, slot.id);
+                        const booked = parseInt(countRes.rows[0].count);
+                        if (booked < slot.max_patients) {
+                            selectedSlotId = slot.id;
+                            break;
+                        }
+                    }
+                    if (!selectedSlotId) {
+                        selectedSlotId = slotsResult.rows[0].id; // Fallback to first slot if all full
+                    }
+                }
+                
+                const newAppt = await appointmentQueries.create({
+                    patient_id, 
+                    doctor_id, 
+                    slot_id: selectedSlotId,
+                    appointment_date: follow_up_date, 
+                    symptoms: 'Follow-up for: ' + diagnosis,
+                    priority: 'normal'
+                });
+                
+                // Auto-confirm the follow-up since the doctor requested it
+                await appointmentQueries.updateStatus(newAppt.rows[0].id, 'confirmed', 'Auto-booked from prescription follow-up');
+                
+                req.flash('success', 'Prescription created and follow-up appointment booked successfully.');
+            } catch (err) {
+                console.error('Failed to auto-book follow-up:', err);
+                req.flash('success', 'Prescription created, but failed to auto-book follow-up appointment.');
+            }
+        } else {
+            req.flash('success', 'Prescription created successfully.');
+        }
+
         res.redirect('/admin/prescriptions');
     } catch (err) {
         console.error(err);

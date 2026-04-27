@@ -21,11 +21,11 @@
     <div class="container nav-inner">
         <a href="/" class="nav-brand">
             <div class="brand-icon">
-                <i class="fas fa-hospital"></i>
+                <img src="/images/logo.png" alt="IIT Ropar Logo">
             </div>
             <div class="brand-text">
-                <span class="brand-title">MEDICAL <span class="accent">CENTER</span></span>
-                <span class="brand-subtitle">IIT Ropar</span>
+                <span class="brand-title">IIT <span class="accent">ROPAR</span></span>
+                <span class="brand-subtitle">Medical Center</span>
             </div>
         </a>
 
@@ -43,8 +43,9 @@
                 <li><a href="/admin/dashboard" class="<%= currentPath === '/admin/dashboard' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> Doctor Dashboard</a></li>
                 <li><a href="/admin/appointments" class="<%= currentPath === '/admin/appointments' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> Appointments</a></li>
                 <li><a href="/admin/prescriptions" class="<%= currentPath === '/admin/prescriptions' ? 'active' : '' %>"><i class="fas fa-file-prescription"></i> Prescriptions</a></li>
+                <li><a href="/admin/bulletins" class="<%= currentPath === '/admin/bulletins' ? 'active' : '' %>"><i class="fas fa-bullhorn"></i> Bulletins</a></li>
                 <li><a href="/admin/feedback" class="<%= currentPath === '/admin/feedback' ? 'active' : '' %>"><i class="fas fa-comments"></i> Feedback</a></li>
-            <% } else if (user && user.role === 'patient') { %>
+            <% } else if (user && user.role === 'student') { %>
                 <li><a href="/" class="<%= currentPath === '/' ? 'active' : '' %>"><i class="fas fa-home"></i> Home</a></li>
                 <li><a href="/patient/dashboard" class="<%= currentPath === '/patient/dashboard' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
                 <li><a href="/patient/appointments" class="<%= currentPath === '/patient/appointments' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
@@ -57,7 +58,7 @@
                 <li><a href="/facilities" class="<%= currentPath === '/facilities' ? 'active' : '' %>"><i class="fas fa-hospital-alt"></i> Facilities</a></li>
                 <li><a href="/information" class="<%= currentPath === '/information' ? 'active' : '' %>"><i class="fas fa-info-circle"></i> Info</a></li>
             <% } %>
-            <% if (user && user.role === 'patient') { %>
+            <% if (user && user.role === 'student') { %>
                 <li><a href="/appointments/book" class="nav-book-btn"><i class="fas fa-calendar-plus"></i> Book Appointment</a></li>
             <% } %>
             <% if (user) { %>
@@ -69,6 +70,7 @@
                             <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
                             <li><a href="/admin/appointments"><i class="fas fa-calendar-check"></i> Appointments</a></li>
                             <li><a href="/admin/prescriptions"><i class="fas fa-file-prescription"></i> Prescriptions</a></li>
+                            <li><a href="/admin/bulletins"><i class="fas fa-bullhorn"></i> Bulletins</a></li>
                             <li><a href="/admin/feedback"><i class="fas fa-comments"></i> Feedback</a></li>
                             <li class="divider"></li>
                         <% } else { %>

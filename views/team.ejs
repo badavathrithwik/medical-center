@@ -15,7 +15,11 @@
                 <div class="team-card">
                     <div class="team-card-left">
                         <div class="team-avatar">
-                            <i class="fas fa-user-md"></i>
+                            <% if (doctor.photo_url) { %>
+                                <img src="<%= doctor.photo_url %>" alt="<%= doctor.name %>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            <% } else { %>
+                                <i class="fas fa-user-md"></i>
+                            <% } %>
                         </div>
                     </div>
                     <div class="team-card-body">

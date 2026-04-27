@@ -24,6 +24,10 @@ CREATE TABLE users (
     roll_number VARCHAR(50),
     gender VARCHAR(10),
     date_of_birth DATE,
+    user_type VARCHAR(20) DEFAULT 'student',
+    is_handicapped BOOLEAN DEFAULT FALSE,
+    reset_password_token VARCHAR(255),
+    reset_password_expires TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -42,6 +46,8 @@ CREATE TABLE doctors (
     email VARCHAR(150),
     bio TEXT,
     photo_url VARCHAR(255) DEFAULT '/images/default-doctor.png',
+    gender VARCHAR(10),
+    symptom_tags TEXT[] DEFAULT '{}',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -92,6 +98,7 @@ CREATE TABLE appointments (
     symptoms TEXT,
     notes TEXT,
     priority VARCHAR(10) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'emergency')),
+    prefer_female_doctor BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

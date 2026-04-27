@@ -134,15 +134,14 @@ img {
 }
 
 .brand-icon {
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 20px;
+}
+.brand-icon img {
+    height: 60px !important;
+    width: auto !important;
+    object-fit: contain;
 }
 
 .brand-text {

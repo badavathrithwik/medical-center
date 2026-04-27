@@ -10,10 +10,11 @@ const userQueries = {
 
     create: (data) =>
         db.query(
-            `INSERT INTO users (name, email, password, role, phone, department, roll_number, gender, date_of_birth)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+            `INSERT INTO users (name, email, password, role, phone, department, roll_number, gender, date_of_birth, user_type, is_handicapped)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
             [data.name, data.email, data.password, data.role || 'student',
-                data.phone, data.department, data.roll_number, data.gender, data.date_of_birth]
+                data.phone, data.department, data.roll_number, data.gender, data.date_of_birth,
+                data.user_type || 'student', data.is_handicapped || false]
         ),
 
     getAll: (role) =>
@@ -36,6 +37,24 @@ const userQueries = {
             `UPDATE users SET name=$1, phone=$2, department=$3, gender=$4, date_of_birth=$5, updated_at=NOW()
              WHERE id=$6 RETURNING *`,
             [data.name, data.phone, data.department, data.gender, data.date_of_birth, id]
+        ),
+        
+    savePasswordResetToken: (id, token, expires) =>
+        db.query(
+            'UPDATE users SET reset_password_token = $1, reset_password_expires = $2 WHERE id = $3',
+            [token, expires, id]
+        ),
+
+    findByPasswordResetToken: (token) =>
+        db.query(
+            'SELECT * FROM users WHERE reset_password_token = $1 AND reset_password_expires > NOW()',
+            [token]
+        ),
+
+    updatePassword: (id, hashedPassword) =>
+        db.query(
+            'UPDATE users SET password = $1, reset_password_token = NULL, reset_password_expires = NULL WHERE id = $2',
+            [hashedPassword, id]
         ),
 };
 
@@ -61,15 +80,19 @@ const doctorQueries = {
 
     getSlotById: (slotId) =>
         db.query('SELECT * FROM doctor_slots WHERE id = $1', [slotId]),
+
+    getFemaleDoctors: () =>
+        db.query("SELECT * FROM doctors WHERE is_active = TRUE AND gender = 'Female' ORDER BY name"),
 };
 
 // ===================== APPOINTMENTS =====================
 const appointmentQueries = {
     create: (data) =>
         db.query(
-            `INSERT INTO appointments (patient_id, doctor_id, slot_id, appointment_date, symptoms, priority)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [data.patient_id, data.doctor_id, data.slot_id, data.appointment_date, data.symptoms, data.priority || 'normal']
+            `INSERT INTO appointments (patient_id, doctor_id, slot_id, appointment_date, symptoms, priority, prefer_female_doctor)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [data.patient_id, data.doctor_id, data.slot_id, data.appointment_date, data.symptoms,
+                data.priority || 'normal', data.prefer_female_doctor || false]
         ),
 
     findById: (id) =>
@@ -88,7 +111,9 @@ const appointmentQueries = {
                     id,
                     ROW_NUMBER() OVER (
                         PARTITION BY doctor_id, appointment_date, slot_id
-                        ORDER BY created_at, id
+                        ORDER BY
+                            CASE priority WHEN 'emergency' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 WHEN 'low' THEN 4 END,
+                            created_at, id
                     ) AS queue_position,
                     COUNT(*) OVER (
                         PARTITION BY doctor_id, appointment_date, slot_id
@@ -111,7 +136,7 @@ const appointmentQueries = {
         db.query(
             `WITH patient_upcoming AS (
                 SELECT a.id, a.patient_id, a.doctor_id, a.slot_id, a.appointment_date,
-                       a.status, a.created_at,
+                       a.status, a.created_at, a.priority,
                        d.name AS doctor_name, d.specialization,
                        ds.start_time, ds.end_time
                 FROM appointments a
@@ -133,7 +158,9 @@ const appointmentQueries = {
                    u.name AS queue_patient_name,
                    ROW_NUMBER() OVER (
                        PARTITION BY pu.id
-                       ORDER BY qa.created_at, qa.id
+                       ORDER BY
+                           CASE qa.priority WHEN 'emergency' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 WHEN 'low' THEN 4 END,
+                           qa.created_at, qa.id
                    ) AS queue_position,
                    COUNT(*) OVER (
                        PARTITION BY pu.id
@@ -151,11 +178,14 @@ const appointmentQueries = {
 
     getByDoctor: (doctorId) =>
         db.query(
-            `SELECT a.*, u.name as patient_name, u.roll_number, u.email as patient_email, u.phone as patient_phone
+            `SELECT a.*, u.name as patient_name, u.roll_number, u.email as patient_email, u.phone as patient_phone,
+                    u.gender as patient_gender, u.date_of_birth as patient_dob, u.user_type as patient_user_type
              FROM appointments a
              JOIN users u ON a.patient_id = u.id
              WHERE a.doctor_id = $1
-             ORDER BY a.appointment_date DESC, a.created_at DESC`, [doctorId]
+             ORDER BY a.appointment_date DESC,
+                      CASE a.priority WHEN 'emergency' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 WHEN 'low' THEN 4 END,
+                      a.created_at DESC`, [doctorId]
         ),
 
     getAll: (filters = {}) => {
@@ -182,7 +212,9 @@ const appointmentQueries = {
             query += ` AND a.doctor_id = $${params.length}`;
         }
 
-        query += ' ORDER BY a.appointment_date DESC, a.created_at DESC';
+        query += ` ORDER BY a.appointment_date DESC,
+                   CASE a.priority WHEN 'emergency' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 WHEN 'low' THEN 4 END,
+                   a.created_at DESC`;
 
         if (filters.limit) {
             params.push(filters.limit);
@@ -228,6 +260,20 @@ const appointmentQueries = {
              WHERE patient_id = $1 AND doctor_id = $2 AND appointment_date = $3 AND status != 'cancelled'`,
             [patientId, doctorId, date]
         ),
+
+    // Get full visit history for a patient (with prescription data joined)
+    getPatientHistory: (patientId) =>
+        db.query(
+            `SELECT a.*, d.name as doctor_name, d.specialization,
+                    p.id as prescription_id, p.diagnosis, p.medicines, p.tests_recommended,
+                    p.instructions as rx_instructions, p.follow_up_date
+             FROM appointments a
+             JOIN doctors d ON a.doctor_id = d.id
+             LEFT JOIN prescriptions p ON p.appointment_id = a.id
+             WHERE a.patient_id = $1
+             ORDER BY a.appointment_date DESC, a.created_at DESC`,
+            [patientId]
+        ),
 };
 
 // ===================== PRESCRIPTIONS =====================
@@ -256,6 +302,16 @@ const prescriptionQueries = {
              JOIN doctors d ON p.doctor_id = d.id
              WHERE p.patient_id = $1
              ORDER BY p.created_at DESC`, [patientId]
+        ),
+
+    getByDoctor: (doctorId) =>
+        db.query(
+            `SELECT p.*, d.name as doctor_name, d.specialization, u.name as patient_name, u.roll_number
+             FROM prescriptions p
+             JOIN doctors d ON p.doctor_id = d.id
+             JOIN users u ON p.patient_id = u.id
+             WHERE p.doctor_id = $1
+             ORDER BY p.created_at DESC`, [doctorId]
         ),
 
     getAll: () =>

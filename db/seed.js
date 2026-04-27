@@ -17,8 +17,8 @@ function nextFutureWeekday(targetDay) {
 
 async function upsertUser(pool, user, hashedPassword) {
     const result = await pool.query(
-        `INSERT INTO users (name, email, password, role, phone, department, roll_number, gender, date_of_birth)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO users (name, email, password, role, phone, department, roll_number, gender, date_of_birth, user_type, is_handicapped)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          ON CONFLICT (email) DO UPDATE SET
              name = EXCLUDED.name,
              password = EXCLUDED.password,
@@ -28,6 +28,8 @@ async function upsertUser(pool, user, hashedPassword) {
              roll_number = EXCLUDED.roll_number,
              gender = EXCLUDED.gender,
              date_of_birth = EXCLUDED.date_of_birth,
+             user_type = EXCLUDED.user_type,
+             is_handicapped = EXCLUDED.is_handicapped,
              updated_at = NOW()
          RETURNING *`,
         [
@@ -39,7 +41,9 @@ async function upsertUser(pool, user, hashedPassword) {
             user.department || null,
             user.roll_number || null,
             user.gender || null,
-            user.date_of_birth || null
+            user.date_of_birth || null,
+            user.user_type || 'student',
+            user.is_handicapped || false
         ]
     );
 
@@ -49,12 +53,18 @@ async function upsertUser(pool, user, hashedPassword) {
 async function getOrCreateDoctor(pool, doctorData) {
     const existing = await pool.query('SELECT * FROM doctors WHERE user_id = $1 LIMIT 1', [doctorData.user_id]);
     if (existing.rows.length > 0) {
-        return existing.rows[0];
+        // Update existing doctor with new fields
+        await pool.query(
+            `UPDATE doctors SET gender = $1, symptom_tags = $2 WHERE id = $3`,
+            [doctorData.gender || null, doctorData.symptom_tags || '{}', existing.rows[0].id]
+        );
+        const updated = await pool.query('SELECT * FROM doctors WHERE id = $1', [existing.rows[0].id]);
+        return updated.rows[0];
     }
 
     const created = await pool.query(
-        `INSERT INTO doctors (user_id, name, specialization, qualification, experience_years, phone, email, bio)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO doctors (user_id, name, specialization, qualification, experience_years, phone, email, bio, photo_url, gender, symptom_tags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING *`,
         [
             doctorData.user_id,
@@ -64,7 +74,10 @@ async function getOrCreateDoctor(pool, doctorData) {
             doctorData.experience_years,
             doctorData.phone,
             doctorData.email,
-            doctorData.bio
+            doctorData.bio,
+            doctorData.photo_url || '/images/default-doctor.png',
+            doctorData.gender || null,
+            doctorData.symptom_tags || '{}'
         ]
     );
 
@@ -133,61 +146,74 @@ async function seed() {
             name: 'Admin',
             email: 'admin@iitrpr.ac.in',
             role: 'admin',
-            phone: '01881-235193'
+            phone: '01881-235193',
+            user_type: 'staff'
         }, adminPass);
 
         const doctorUser1 = await upsertUser(pool, {
-            name: 'Dr. Rajesh Sharma',
-            email: 'rajesh.sharma@iitrpr.ac.in',
+            name: 'Dr. Reena Rani',
+            email: 'reena@iitrpr.ac.in',
             role: 'doctor',
-            phone: '01881-235187'
+            phone: '01881-235187',
+            gender: 'Female'
         }, doctorPass);
 
         const doctorUser2 = await upsertUser(pool, {
-            name: 'Dr. Priya Gupta',
-            email: 'priya.gupta@iitrpr.ac.in',
+            name: 'Dr. Charanjit Singh',
+            email: 'drcharanjit@iitrpr.ac.in',
             role: 'doctor',
-            phone: '01881-235188'
+            phone: '01881-235188',
+            gender: 'Male'
         }, doctorPass);
 
         const doctorUser3 = await upsertUser(pool, {
-            name: 'Dr. Anil Kumar',
-            email: 'anil.kumar@iitrpr.ac.in',
+            name: 'Dr. Neetesh Singh',
+            email: 'neetesh@iitrpr.ac.in',
             role: 'doctor',
-            phone: '01881-235189'
+            phone: '01881-235188',
+            gender: 'Male'
         }, doctorPass);
 
         const doctor1 = await getOrCreateDoctor(pool, {
             user_id: doctorUser1.id,
-            name: 'Dr. Rajesh Sharma',
-            specialization: 'General Medicine',
-            qualification: 'MBBS, MD (Internal Medicine)',
+            name: 'Dr. Reena Rani',
+            specialization: 'Medical Officer – Allopathy',
+            qualification: 'MBBS',
             experience_years: 15,
             phone: '01881-235187',
-            email: 'rajesh.sharma@iitrpr.ac.in',
-            bio: 'Dr. Rajesh Sharma is an experienced general physician with expertise in treating common illnesses, infections, and chronic conditions.'
+            email: 'reena@iitrpr.ac.in',
+            bio: 'Dr. Reena Rani is a Medical Officer specializing in Allopathy.',
+            photo_url: 'https://ui-avatars.com/api/?name=Reena+Rani&background=random',
+            gender: 'Female',
+            symptom_tags: '{fever,cold,cough,infection,headache,body pain,stomach,vomiting,flu,wound,injury,allergy,skin rash,ear,eye,nose}'
         });
 
         const doctor2 = await getOrCreateDoctor(pool, {
             user_id: doctorUser2.id,
-            name: 'Dr. Priya Gupta',
-            specialization: 'Mental Health & Counseling',
-            qualification: 'MBBS, MD (Psychiatry), DM',
+            name: 'Dr. Charanjit Singh',
+            specialization: 'Medical Officer – Allopathy',
+            qualification: 'MBBS',
             experience_years: 10,
-            phone: '01881-235188',
-            email: 'priya.gupta@iitrpr.ac.in',
-            bio: 'Dr. Priya Gupta specializes in mental health, stress management, and counseling support for students.'
+            phone: '01881-235187',
+            email: 'drcharanjit@iitrpr.ac.in',
+            bio: 'Dr. Charanjit Singh is a Medical Officer specializing in Allopathy.',
+            photo_url: 'https://ui-avatars.com/api/?name=Charanjit+Singh&background=random',
+            gender: 'Male',
+            symptom_tags: '{fever,cold,cough,infection,headache,body pain,blood pressure,diabetes,asthma,breathing,chest pain,weakness}'
         });
 
         const doctor3 = await getOrCreateDoctor(pool, {
             user_id: doctorUser3.id,
-            name: 'Dr. Anil Kumar',
-            specialization: 'Orthopedics & Sports Medicine',
-            qualification: 'MBBS, MS (Orthopedics)',
+            name: 'Dr. Neetesh Singh',
+            specialization: 'Homeopathic Doctor',
+            qualification: 'BHMS',
             experience_years: 12,
-            phone: '01881-235189',
-            email: 'anil.kumar@iitrpr.ac.in',
-            bio: 'Dr. Anil Kumar focuses on sports injuries, musculoskeletal disorders, and rehabilitation plans.'
+            phone: '01881-235188',
+            email: 'neetesh@iitrpr.ac.in',
+            bio: 'Dr. Neetesh Singh is a Homeopathic Doctor.',
+            photo_url: 'https://ui-avatars.com/api/?name=Neetesh+Singh&background=random',
+            gender: 'Male',
+            symptom_tags: '{chronic,recurring,migraine,sinusitis,eczema,arthritis,acidity,digestive,hair loss,piles,tonsils,immunity,seasonal}'
         });
 
         for (let day = 1; day <= 5; day++) {
@@ -216,7 +242,9 @@ async function seed() {
                 department: 'Computer Science',
                 roll_number: '2023CSB1001',
                 gender: 'Male',
-                date_of_birth: '2004-05-15'
+                date_of_birth: '2004-05-15',
+                user_type: 'student',
+                is_handicapped: false
             },
             {
                 key: 'patient1',
@@ -226,7 +254,9 @@ async function seed() {
                 department: 'Electrical Engineering',
                 roll_number: '2023EEB1001',
                 gender: 'Male',
-                date_of_birth: '2004-01-10'
+                date_of_birth: '2004-01-10',
+                user_type: 'student',
+                is_handicapped: false
             },
             {
                 key: 'patient2',
@@ -236,7 +266,9 @@ async function seed() {
                 department: 'Mechanical Engineering',
                 roll_number: '2023MEB1002',
                 gender: 'Female',
-                date_of_birth: '2004-03-12'
+                date_of_birth: '2004-03-12',
+                user_type: 'student',
+                is_handicapped: false
             },
             {
                 key: 'patient3',
@@ -246,7 +278,9 @@ async function seed() {
                 department: 'Civil Engineering',
                 roll_number: '2023CEB1003',
                 gender: 'Male',
-                date_of_birth: '2004-07-21'
+                date_of_birth: '2004-07-21',
+                user_type: 'student',
+                is_handicapped: false
             },
             {
                 key: 'patient5',
@@ -256,7 +290,48 @@ async function seed() {
                 department: 'Chemical Engineering',
                 roll_number: '2023CHB1005',
                 gender: 'Female',
-                date_of_birth: '2004-09-02'
+                date_of_birth: '2004-09-02',
+                user_type: 'student',
+                is_handicapped: false
+            },
+            // Faculty member for priority testing
+            {
+                key: 'faculty1',
+                name: 'Prof. Sharma',
+                email: 'prof.sharma@iitrpr.ac.in',
+                phone: '9000000010',
+                department: 'Computer Science',
+                roll_number: '',
+                gender: 'Male',
+                date_of_birth: '1975-03-20',
+                user_type: 'faculty',
+                is_handicapped: false
+            },
+            // Senior citizen for priority testing
+            {
+                key: 'senior1',
+                name: 'Retired Prof. Gupta',
+                email: 'prof.gupta@iitrpr.ac.in',
+                phone: '9000000011',
+                department: 'Physics',
+                roll_number: '',
+                gender: 'Male',
+                date_of_birth: '1955-06-15',
+                user_type: 'faculty',
+                is_handicapped: false
+            },
+            // PwD student for priority testing
+            {
+                key: 'pwd1',
+                name: 'Patient PwD',
+                email: 'pwd.student@iitrpr.ac.in',
+                phone: '9000000012',
+                department: 'Mathematics',
+                roll_number: '2023MAB1001',
+                gender: 'Male',
+                date_of_birth: '2003-11-08',
+                user_type: 'student',
+                is_handicapped: true
             }
         ];
 
@@ -398,11 +473,17 @@ async function seed() {
 
         console.log('Database seeded successfully!');
         console.log('\n--- Login Credentials ---');
-        console.log(`Admin:   ${admin.email} / admin123`);
-        console.log(`Doctor:  ${doctorUser1.email} / doctor123`);
-        console.log(`Student: ${students.rithwik.email} / student123`);
-        console.log('Queue demo students: patient1@iitrpr.ac.in, patient2@iitrpr.ac.in, patient3@iitrpr.ac.in, patient5@iitrpr.ac.in / student123');
-        console.log(`Sample FCFS queue date: ${queueDateString} with Dr. Rajesh Sharma (09:00 - 12:00)`);
+        console.log(`Admin:     ${admin.email} / admin123`);
+        console.log(`Doctor:    ${doctorUser1.email} / doctor123 (Female)`);
+        console.log(`Doctor:    ${doctorUser2.email} / doctor123 (Male)`);
+        console.log(`Doctor:    ${doctorUser3.email} / doctor123 (Male, Homeopathy)`);
+        console.log(`Student:   ${students.rithwik.email} / student123`);
+        console.log(`Faculty:   ${students.faculty1.email} / student123 (priority boost)`);
+        console.log(`Senior:    ${students.senior1.email} / student123 (priority boost)`);
+        console.log(`PwD:       ${students.pwd1.email} / student123 (priority boost)`);
+        console.log(`Female:    ${students.patient2.email} / student123 (female doctor pref)`);
+        console.log('Queue demo students: patient1@iitrpr.ac.in, patient3@iitrpr.ac.in, patient5@iitrpr.ac.in / student123');
+        console.log(`Sample FCFS queue date: ${queueDateString} with Dr. Reena Rani (09:00 - 12:00)`);
     } catch (err) {
         console.error('Error seeding database:', err.message);
     } finally {

@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const { isAuthenticated } = require('../middleware/auth');
-const { doctorQueries, appointmentQueries } = require('../models/queries');
+const { doctorQueries, appointmentQueries, userQueries } = require('../models/queries');
+const { matchDoctors, calculatePriority } = require('../utils/symptomMatcher');
+const { sendBookingConfirmation } = require('../utils/emailService');
 
 // GET - Book appointment page (choose doctor)
 router.get('/book', isAuthenticated, async (req, res) => {
@@ -11,15 +13,47 @@ router.get('/book', isAuthenticated, async (req, res) => {
             const slots = await doctorQueries.getSlots(doc.id);
             doctorsWithSlots.push({ ...doc, slots: slots.rows });
         }
+
+        // Get patient info for gender-based doctor preference
+        const patient = await userQueries.findById(req.session.user.id);
+        const patientData = patient.rows[0] || {};
+
         res.render('appointments/book', {
             title: 'Book Appointment',
             doctors: doctorsWithSlots,
-            selectedDoctor: req.query.doctor || null
+            selectedDoctor: req.query.doctor || null,
+            patientGender: patientData.gender || '',
+            patientUserType: patientData.user_type || 'student',
+            patientIsHandicapped: patientData.is_handicapped || false,
+            patientDob: patientData.date_of_birth || null
         });
     } catch (err) {
         console.error(err);
         req.flash('error', 'Failed to load booking page.');
         res.redirect('/');
+    }
+});
+
+// GET - Recommend doctors based on symptoms (AJAX)
+router.get('/recommend-doctors', isAuthenticated, async (req, res) => {
+    try {
+        const { symptoms } = req.query;
+        if (!symptoms) {
+            return res.json({ doctors: [] });
+        }
+
+        const allDoctors = await doctorQueries.getAll();
+        const doctorsWithSlots = [];
+        for (const doc of allDoctors.rows) {
+            const slots = await doctorQueries.getSlots(doc.id);
+            doctorsWithSlots.push({ ...doc, slots: slots.rows });
+        }
+
+        const ranked = matchDoctors(symptoms, doctorsWithSlots);
+        res.json({ doctors: ranked });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to recommend doctors' });
     }
 });
 
@@ -55,7 +89,7 @@ router.get('/slots/:doctorId/:date', isAuthenticated, async (req, res) => {
 // POST - Create appointment
 router.post('/book', isAuthenticated, async (req, res) => {
     try {
-        const { doctor_id, slot_id, appointment_date, symptoms, priority } = req.body;
+        const { doctor_id, slot_id, appointment_date, symptoms, priority, prefer_female_doctor } = req.body;
         const patient_id = req.session.user.id;
 
         // Validate date is not in the past
@@ -82,13 +116,50 @@ router.post('/book', isAuthenticated, async (req, res) => {
             return res.redirect('/appointments/book');
         }
 
-        await appointmentQueries.create({
-            patient_id, doctor_id, slot_id,
-            appointment_date, symptoms,
-            priority: priority || 'normal'
+        // Get full patient data for priority calculation
+        const patientResult = await userQueries.findById(patient_id);
+        const patientData = patientResult.rows[0] || {};
+
+        // Auto-calculate priority
+        const { priority: autoPriority, reasons } = calculatePriority({
+            symptoms,
+            userType: patientData.user_type,
+            isHandicapped: patientData.is_handicapped,
+            dateOfBirth: patientData.date_of_birth,
+            manualPriority: priority || 'normal'
         });
 
-        req.flash('success', 'Appointment booked successfully! You will receive confirmation soon.');
+        const appointment = await appointmentQueries.create({
+            patient_id, doctor_id, slot_id,
+            appointment_date, symptoms,
+            priority: autoPriority,
+            prefer_female_doctor: prefer_female_doctor === 'on' || prefer_female_doctor === 'true' || false
+        });
+
+        // Get doctor info for email
+        const doctor = await doctorQueries.findById(doctor_id);
+        const doctorData = doctor.rows[0] || {};
+        const slotData = slot.rows[0] || {};
+
+        // Send confirmation email (non-blocking)
+        const dateFormatted = new Date(appointment_date).toLocaleDateString('en-IN', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        const timeSlot = `${slotData.start_time ? slotData.start_time.substring(0, 5) : ''} - ${slotData.end_time ? slotData.end_time.substring(0, 5) : ''}`;
+
+        sendBookingConfirmation({
+            patientName: patientData.name || req.session.user.name,
+            patientEmail: patientData.email || req.session.user.email,
+            doctorName: doctorData.name || 'Doctor',
+            specialization: doctorData.specialization || '',
+            appointmentDate: dateFormatted,
+            timeSlot: timeSlot,
+            symptoms: symptoms || 'Not specified',
+            priority: autoPriority,
+            priorityReasons: reasons
+        }).catch(err => console.error('Email error (non-blocking):', err.message));
+
+        req.flash('success', 'Appointment booked successfully! A confirmation email has been sent.');
         res.redirect('/patient/appointments');
     } catch (err) {
         console.error(err);

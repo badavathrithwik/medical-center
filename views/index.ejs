@@ -9,7 +9,7 @@
         <p>Dedicated to providing accessible, high-quality healthcare for the IIT Ropar community</p>
         <div class="hero-buttons">
             <a href="/appointments/book" class="btn btn-primary btn-lg"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
-            <a href="/team" class="btn btn-outline btn-lg"><i class="fas fa-user-md"></i> Meet Our Doctors</a>
+            <a href="/team" class="btn btn-lg" style="background: transparent; color: white; border: 2px solid rgba(255,255,255,0.8);"><i class="fas fa-user-md"></i> Meet Our Doctors</a>
         </div>
     </div>
 </section>
@@ -98,8 +98,12 @@
             <% if (doctors && doctors.length > 0) { %>
                 <% doctors.forEach(doctor => { %>
                     <div class="doctor-card">
-                        <div class="doctor-avatar">
-                            <i class="fas fa-user-md"></i>
+                        <div class="doctor-avatar" style="overflow: hidden;">
+                            <% if (doctor.photo_url) { %>
+                                <img src="<%= doctor.photo_url %>" alt="<%= doctor.name %>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            <% } else { %>
+                                <i class="fas fa-user-md"></i>
+                            <% } %>
                         </div>
                         <h3><%= doctor.name %></h3>
                         <span class="doctor-spec"><%= doctor.specialization %></span>
