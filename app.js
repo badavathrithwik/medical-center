@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+const { pool } = require('./config/db');
 const flash = require('connect-flash');
 const methodOverride = require('method-override');
 const path = require('path');
@@ -21,6 +23,7 @@ app.use(methodOverride('_method'));
 
 // Session
 app.use(session({
+    store: new pgSession({ pool: pool, tableName: 'session' }),
     secret: process.env.SESSION_SECRET || 'default-secret',
     resave: false,
     saveUninitialized: false,
